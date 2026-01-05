@@ -14,3 +14,8 @@ If someone asks:
 
 You can say:
 In Next.js App Router, page files have strict export rules. I initially exported configuration objects directly from a page, which worked in dev but failed in production. I fixed it by moving shared logic into separate modules and keeping page files compliant.
+
+You were manually routing to /sign-in, which is a special Clerk-controlled route, while also running global client-side providers and middleware.
+That combination created a redirect loop.
+
+Routing to a protected normal page (/dashboard) let Clerk + middleware handle auth correctly, which is why it fixed the issue.
