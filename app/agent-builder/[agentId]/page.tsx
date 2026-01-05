@@ -1,4 +1,5 @@
 "use client";
+import { nodeTypes } from "./nodeTypes";
 
 import React, { useCallback, useContext, useEffect, useState, useRef } from "react";
 import Header from "../_components/Header";
@@ -36,17 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 
-/* ✅ FIXED: Added 'start' key for StartNode */
-export const nodeTypes = {
-  start: StartNode,           // ✅ Add this
-  StartNode: StartNode,
-  AgentNode: AgentNode,
-  EndNode: EndNode,
-  IfElseNode: IfElseNode,
-  WhileNode: WhileNode,
-  UserApprovalNode: UserApprovalNode,
-  ApiNode: ApiNode,
-};
+/* FIXED: Added 'start' key for StartNode */
 
 function AgentBuilder() {
   const { agentId } = useParams();
@@ -193,9 +184,24 @@ function AgentBuilder() {
 
   console.log("Rendering with nodes:", addedNodes);
 
+  const onPublish = async () => {
+  if (!agentId) return;
+
+  try {
+    await UpdateAgentDetail({
+      agentId: agentId as string,
+      published: true,
+    });
+    toast.success("Agent published successfully!");
+  } catch (err) {
+    toast.error("Failed to publish agent");
+  }
+};
+
+
   return (
     <div>
-      <Header agentDetail={agentDetail || undefined} />
+      <Header agentDetail={agentDetail || undefined} onPublish={onPublish} />
       <div style={{ width: "100vw", height: "90vh" }}>
         <ReactFlow
           nodes={addedNodes || []}

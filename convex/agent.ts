@@ -49,32 +49,33 @@ export const GetAgentById = query({
     }
 })
 
-// ✅ UPDATED VERSION - Replace your UpdateAgentDetail with this
-export const UpdateAgentDetail=mutation({
-    args:{
-        agentId:v.string(),  // Changed from id to agentId
-        nodes:v.any(),
-        edges:v.any()
-    },
-    handler:async(ctx , args)=>{
-        // Find the agent by agentId first
-        const agent = await ctx.db.query('AgentTable')
-            .filter(q=>q.eq(q.field('agentId'), args.agentId))
-            .first();
-        
-        if (!agent) {
-            throw new Error("Agent not found");
-        }
+export const UpdateAgentDetail = mutation({
+  args: {
+    agentId: v.string(),
+    nodes: v.optional(v.any()),
+    edges: v.optional(v.any()),
+    published: v.optional(v.boolean()), // ✅ ADD THIS
+  },
+  handler: async (ctx, args) => {
+    const agent = await ctx.db
+      .query("AgentTable")
+      .filter(q => q.eq(q.field("agentId"), args.agentId))
+      .first();
 
-        // Update using the Convex _id
-        await ctx.db.patch(agent._id,{
-            edges:args.edges,
-            nodes:args.nodes
-        })
-
-        return { success: true, agentId: args.agentId };
+    if (!agent) {
+      throw new Error("Agent not found");
     }
-})
+
+    await ctx.db.patch(agent._id, {
+      ...(args.nodes !== undefined && { nodes: args.nodes }),
+      ...(args.edges !== undefined && { edges: args.edges }),
+      ...(args.published !== undefined && { published: args.published }),
+    });
+
+    return { success: true, agentId: args.agentId };
+  },
+});
+
 // Add this to your agent.ts file temporarily for debugging
 export const DebugListAllAgents = query({
     args: {},
