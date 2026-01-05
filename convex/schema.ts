@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+//convex automatically create unique id for u, so dont need to create id field
 export default defineSchema({
     UserTable:defineTable({
         name:v.string(),
@@ -16,7 +17,13 @@ export default defineSchema({
         nodes:v.optional(v.any()),
         edges:v.optional(v.any()),
         published: v.boolean(),
-        userId: v.id('UserTable'), //it will connext with userTable
+        userId: v.id('UserTable'), //it will connect with userTable
         agentToolConfig: v.optional(v.any())
+    }),
+
+    ConversationTable:defineTable({
+        conversationId: v.string(),
+        agentId: v.id('AgentTable'),
+        userId: v.id('UserTable'),
     })
 })

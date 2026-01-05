@@ -37,6 +37,7 @@ function Provider({ children }: { children: React.ReactNode }) {
   const [nodeEdges, setNodeEdges] = useState([]);
 
   // Create or get user from Convex database
+  //define the mutation
   const CreateAndGetUser = async () => {
     console.log("🚀 Calling Convex mutation for:", user?.primaryEmailAddress?.emailAddress);
 

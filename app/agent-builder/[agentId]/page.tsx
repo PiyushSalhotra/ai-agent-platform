@@ -1,207 +1,234 @@
-"use client"
-import React, { useCallback, useContext, useEffect, useState } from 'react'
-import Header from '../_components/Header'
-import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Background, MiniMap, Controls, Panel, useOnSelectionChange, OnSelectionChangeParams } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import StartNode from '../_customNodes/StartNode';
-import AgentNode from '../_customNodes/AgentNode';
-import AgentToolsPanel from '../_components/AgentToolsPanel';
-import { WorkflowContext } from '@/context/WorkflowContext';
-import { useConvex, useMutation, useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { useParams } from 'next/navigation';
-import { Agent } from '@/types/AgentType';
-import { Button } from '@/components/ui/button';
-import { Save } from 'lucide-react';
-import { toast, Toaster } from 'sonner';
-import EndNode from '../_customNodes/EndNode';
-import IfElseNode from '../_customNodes/IfElseNode';
-import WhileNode from '../_customNodes/WhileNode';
-import UserApprovalNode from '../_customNodes/UserApprovalNode';
-import ApiNode from '../_customNodes/ApiNode';
-import SettingPanel from '../_components/SettingPanel';
+"use client";
 
-//define nodes
+import React, { useCallback, useContext, useEffect, useState, useRef } from "react";
+import Header from "../_components/Header";
+import {
+  ReactFlow,
+  applyNodeChanges,
+  applyEdgeChanges,
+  addEdge,
+  Background,
+  MiniMap,
+  Controls,
+  Panel,
+  useOnSelectionChange,
+  OnSelectionChangeParams,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+
+import StartNode from "../_customNodes/StartNode";
+import AgentNode from "../_customNodes/AgentNode";
+import EndNode from "../_customNodes/EndNode";
+import IfElseNode from "../_customNodes/IfElseNode";
+import WhileNode from "../_customNodes/WhileNode";
+import UserApprovalNode from "../_customNodes/UserApprovalNode";
+import ApiNode from "../_customNodes/ApiNode";
+
+import AgentToolsPanel from "../_components/AgentToolsPanel";
+import SettingPanel from "../_components/SettingPanel";
+
+import { WorkflowContext } from "@/context/WorkflowContext";
+import { useConvex, useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useParams } from "next/navigation";
+import { Agent } from "@/types/AgentType";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+import { toast } from "sonner";
+
+/* ✅ FIXED: Added 'start' key for StartNode */
 export const nodeTypes = {
+  start: StartNode,           // ✅ Add this
   StartNode: StartNode,
   AgentNode: AgentNode,
   EndNode: EndNode,
-  IfElseNode:IfElseNode,
-  WhileNode:WhileNode,
-  UserApprovalNode:UserApprovalNode,
-  ApiNode:ApiNode
+  IfElseNode: IfElseNode,
+  WhileNode: WhileNode,
+  UserApprovalNode: UserApprovalNode,
+  ApiNode: ApiNode,
 };
 
 function AgentBuilder() {
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
-  const {agentId} = useParams();
+  const { agentId } = useParams();
+//   Used to:
+// Fetch agent from Convex
+// Save workflow changes
 
-  const {addedNodes, setAddedNodes, nodeEdges, setNodeEdges,setSelectedNode} = useContext(WorkflowContext);
+  const {
+    addedNodes,
+    setAddedNodes,
+    nodeEdges,
+    setNodeEdges,
+    setSelectedNode,
+  } = useContext(WorkflowContext);
+
   const convex = useConvex();
-  const UpdateAgentDetail = useMutation(api.agent.UpdateAgentDetail)
-  const [agentDetail, setAgentDetail] = useState<Agent>();
+  const UpdateAgentDetail = useMutation(api.agent.UpdateAgentDetail);
+//   useConvex() → read data
+// useMutation() → write/update data
+
+  const [agentDetail, setAgentDetail] = useState<Agent | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+//   agentDetail → full agent info from DB
+// isSaving → disables Save button + UX feedback
 
-  // Debug query - added INSIDE the component
-  const allAgents = useQuery(api.agent.DebugListAllAgents);
+  const isInternalUpdate = useRef(false);
+// When you load nodes from DB:
+// setAddedNodes() triggers
+// onNodesChange() fires
+// Infinite loop / overwrites happen 
 
+  //Fetch Agent from DB
   useEffect(() => {
-    if (allAgents) {
-      console.log('=== ALL AGENTS IN DATABASE ===');
-      console.log('Total agents:', allAgents.length);
-      allAgents.forEach((agent, index) => {
-        console.log(`Agent ${index + 1}:`, {
-          _id: agent._id,
-          agentId: agent.agentId,
-          name: agent.name
-        });
+    if (agentId) GetAgentDetail();
+  }, [agentId]);
+
+  const GetAgentDetail = async () => {
+    const result = await convex.query(api.agent.GetAgentById, {
+      agentId: agentId as string,
+    });
+    if (result) setAgentDetail(result as Agent);
+  };
+
+  /* ✅ FIXED: Check for both "start" and "StartNode" types */
+  useEffect(() => {
+    if (!agentDetail) return;
+
+    let safeNodes = Array.isArray(agentDetail.nodes)
+      ? [...agentDetail.nodes]
+      : [];
+    const safeEdges = Array.isArray(agentDetail.edges)
+      ? agentDetail.edges
+      : [];
+
+    // ✅ Check for both possible start node types
+    const hasStart = safeNodes.some((n) => n.type === "start" || n.type === "StartNode" || n.id === "start");
+
+    //Guarantees:
+//Every workflow has a start
+//User can’t delete it
+    if (!hasStart) {
+      // ✅ Add start node at the beginning
+      safeNodes.unshift({
+        id: "start",
+        type: "start",
+        position: { x: 250, y: 100 },
+        data: { label: "Start" },
+        deletable: false,
       });
-      console.log('Looking for agentId:', agentId);
-      console.log('===========================');
     }
-  }, [allAgents, agentId]);
 
-  useEffect(() => {
-    console.log('Component mounted, agentId:', agentId);
-    if (agentId) {
-      GetAgentDetail();
-    }
-  }, [agentId])
+    console.log("Loading nodes:", safeNodes);
 
-  const GetAgentDetail = async() => {
-    try {
-      console.log('Fetching agent with ID:', agentId);
-      const result = await convex.query(api.agent.GetAgentById, {
-        agentId: agentId as string
-      });
-      console.log('Agent Detail Loaded:', result);
-      
-      if (result) {
-        setAgentDetail(result);
-        console.log('Agent detail state updated:', result);
-      } else {
-        console.error('No result returned from GetAgentById');
-      }
-    } catch (error) {
-      console.error('Error loading agent:', error);
-    }
-  }
+    isInternalUpdate.current = true;
+    setAddedNodes(safeNodes);
+    setNodeEdges(safeEdges);
+    isInternalUpdate.current = false;
+  }, [agentDetail, setAddedNodes, setNodeEdges]);
 
-  useEffect(() => {
-    //for saving previous data
-    if(agentDetail){
-      setNodes(agentDetail.nodes);
-      setEdges(agentDetail.edges);
-      setAddedNodes(agentDetail.nodes);
-      setNodeEdges(agentDetail.edges);
-    }
-    
-  }, [agentDetail])
-
-  useEffect(()=>{
-    addedNodes&&setNodes(addedNodes)
-  },[addedNodes])
-  useEffect(() => {
-    edges && setNodeEdges(edges);
-  }, [edges])
-
-  
-  const SaveNodeAndEdges = async() => {
-    console.log('Save button clicked');
-    console.log('Agent Detail:', agentDetail);
-    console.log('Agent ID from params:', agentId);
-    
-    if (!agentId) {
-      console.error('No agent ID available');
-      alert('No agent ID available');
-      return;
-    }
+// Disable button
+// Save nodes + edges to Convex
+// Show toast
+// Re-enable button
+  const SaveNodeAndEdges = async () => {
+    if (!agentId) return;
 
     setIsSaving(true);
     try {
-      console.log('Saving with agentId:', agentId);
-      console.log('Nodes:', addedNodes || nodes);
-      console.log('Edges:', nodeEdges || edges);
-      
-      const result = await UpdateAgentDetail({
+      console.log("Saving nodes:", addedNodes);
+      await UpdateAgentDetail({
         agentId: agentId as string,
-        edges: nodeEdges || edges,
-        nodes: addedNodes || nodes
+        nodes: addedNodes,
+        edges: nodeEdges,
       });
-      console.log('Saved successfully:', result);
-      toast.success('Saved!')
-    } catch (error) {
-      console.error('Error saving:', error);
-      alert('Error saving: ' + error);
+      toast.success("Saved!");
     } finally {
       setIsSaving(false);
     }
-  }
- 
+  };
+
+  //Nodes Change, handles drag,resize,delete, position updates
   const onNodesChange = useCallback(
-    (changes: any) => setNodes((nodesSnapshot) => {
-      const updated = applyNodeChanges(changes, nodesSnapshot)
-      setAddedNodes(updated);
-      return updated;
-    }),
-    [setAddedNodes],
-  );
-  
-  const onEdgesChange = useCallback(
-    (changes: any) => setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
-    [],
-  );
-  
-  const onConnect = useCallback(
-    //@ts-ignore
-    (params: any) => setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
-    [],
+    (changes: any) => {
+      if (isInternalUpdate.current) return;
+      
+      setAddedNodes((prev: any[]) => {
+        const updated = applyNodeChanges(changes, prev || []);
+        console.log("Nodes after change:", updated);
+        return updated;
+      });
+    },
+    [setAddedNodes]
   );
 
-  const onNodeSelect = useCallback(({nodes,edges}:OnSelectionChangeParams)=>{
-    setSelectedNode(nodes[0]);
-    console.log(nodes[0])
-  },[])
-  useOnSelectionChange({
-    onChange: onNodeSelect
-  })
+  //edges changes handles edge delete,move
+  const onEdgesChange = useCallback(
+    (changes: any) => {
+      setNodeEdges((prev: any[]) =>
+        applyEdgeChanges(changes, prev || [])
+      );
+    },
+    [setNodeEdges]
+  );
+
+  //Connect Nodes
+  const onConnect = useCallback(
+    (params: any) => {
+      setNodeEdges((prev: any[]) => addEdge(params, prev || []));
+    },
+    [setNodeEdges]
+  );
+
+//When user clicks a node:
+//That node becomes active
+//Settings panel updates
+  const onNodeSelect = useCallback(
+    ({ nodes }: OnSelectionChangeParams) => {
+      setSelectedNode(nodes?.[0] || null);
+    },
+    [setSelectedNode]
+  );
+
+  useOnSelectionChange({ onChange: onNodeSelect });
+
+  console.log("Rendering with nodes:", addedNodes);
 
   return (
     <div>
-      <Header agentDetail={agentDetail}/>
-      <div style={{ width: '100vw', height: '90vh' }}>
+      <Header agentDetail={agentDetail || undefined} />
+      <div style={{ width: "100vw", height: "90vh" }}>
         <ReactFlow
-          nodes={nodes}
-          edges={edges}
+          nodes={addedNodes || []}
+          edges={nodeEdges || []}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          fitView
           nodeTypes={nodeTypes}
+          fitView
         >
-          <MiniMap/>
-          <Controls/>
+          <MiniMap />
+          <Controls />
           {/* @ts-ignore */}
-          <Background variant='dots' gap={12} size={1}/>
-          <Panel position='top-left'>
-            <AgentToolsPanel/>
+          <Background variant="dots" gap={12} size={1} />
+
+          <Panel position="top-left">
+            <AgentToolsPanel />
           </Panel>
-          <Panel position='top-right'>
-            <SettingPanel/>
+
+          <Panel position="top-right">
+            <SettingPanel />
           </Panel>
-          <Panel position='bottom-center'>
-            <Button 
-              onClick={SaveNodeAndEdges}
-              disabled={isSaving}
-            >
-              <Save/> {isSaving ? 'Saving...' : 'Save'}
+
+          <Panel position="bottom-center">
+            <Button onClick={SaveNodeAndEdges} disabled={isSaving}>
+              <Save className="mr-1" />
+              {isSaving ? "Saving..." : "Save"}
             </Button>
           </Panel>
         </ReactFlow>
       </div>
     </div>
-  )
+  );
 }
 
-export default AgentBuilder
+export default AgentBuilder;

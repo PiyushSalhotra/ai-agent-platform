@@ -22,12 +22,16 @@ function ApiAgentSettings({ selectedNode, updateFormData }: any) {
 
     const [formData, setFormData] = useState(defaultSettings);
 
-    // Always keep safe fallback
     useEffect(() => {
         if (selectedNode?.data?.settings) {
-            setFormData(selectedNode.data.settings)
-        } else {
-            setFormData(defaultSettings)
+            setFormData({
+                name: selectedNode.data.settings.name || '',
+                method: selectedNode.data.settings.method || 'GET',
+                url: selectedNode.data.settings.url || '',
+                apiKey: selectedNode.data.settings.apiKey || '',
+                includeApiKey: selectedNode.data.settings.includeApiKey ?? true,
+                bodyparams: selectedNode.data.settings.bodyparams || ''
+            })
         }
     }, [selectedNode])
 
@@ -38,7 +42,6 @@ function ApiAgentSettings({ selectedNode, updateFormData }: any) {
         }))
     }
 
-    // JSON Upload
     const handleJsonFileUpload = async (event: any) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -66,22 +69,20 @@ function ApiAgentSettings({ selectedNode, updateFormData }: any) {
                 Call your external API endpoint with your chosen method
             </p>
 
-            {/* Name */}
             <div className='mt-3 space-y-1'>
                 <Label>Name</Label>
                 <Input
                     placeholder='Api Agent'
                     onChange={(event) => handleChange('name', event.target.value)}
-                    value={formData?.name}
+                    value={formData.name}
                 />
             </div>
 
-            {/* Method */}
             <div className='mt-3 space-y-1'>
                 <Label>Request Method</Label>
                 <Select
                     onValueChange={(value) => handleChange('method', value)}
-                    value={formData?.method}
+                    value={formData.method}
                 >
                     <SelectTrigger>
                         <SelectValue placeholder="Select Method" />
@@ -93,27 +94,24 @@ function ApiAgentSettings({ selectedNode, updateFormData }: any) {
                 </Select>
             </div>
 
-            {/* URL */}
             <div className='mt-3 space-y-1'>
                 <Label>API URL</Label>
                 <Input
                     placeholder='https://api.example.com/data'
                     onChange={(event) => handleChange('url', event.target.value)}
-                    value={formData?.url}
+                    value={formData.url}
                 />
             </div>
 
-            {/* API Key Toggle */}
             <div className='mt-3 space-y-1 flex flex-row justify-between items-center'>
                 <Label>Include API Key</Label>
                 <Switch
-                    checked={formData?.includeApiKey}
+                    checked={formData.includeApiKey}
                     onCheckedChange={(checked) => handleChange('includeApiKey', checked)}
                 />
             </div>
 
-            {/* NEW: Show API Key input only if toggle is ON */}
-            {formData?.includeApiKey && (
+            {formData.includeApiKey && (
                 <div className="mt-3 space-y-1">
                     <Label>Enter API Key</Label>
                     <Input
@@ -125,14 +123,13 @@ function ApiAgentSettings({ selectedNode, updateFormData }: any) {
                 </div>
             )}
 
-            {/* POST Body Params Section */}
-            {formData?.method === "POST" && (
+            {formData.method === "POST" && (
                 <div className='mt-4'>
                     <Label>Body Params (JSON)</Label>
                     <Textarea
                         placeholder='{"key": "value"}'
                         className='mt-2 min-h-[100px]'
-                        value={formData?.bodyparams}
+                        value={formData.bodyparams}
                         onChange={(e) => handleChange("bodyparams", e.target.value)}
                     />
                     
@@ -141,7 +138,6 @@ function ApiAgentSettings({ selectedNode, updateFormData }: any) {
                 </div>
             )}
 
-            {/* Save */}
             <Button className='w-full mt-5' onClick={onSave}>Save</Button>
         </div>
     )

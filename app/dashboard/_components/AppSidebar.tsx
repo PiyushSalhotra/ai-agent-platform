@@ -1,5 +1,5 @@
 "use client"
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import {
   Sidebar,
   SidebarContent,
@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/sidebar"
 import Image from 'next/image'
 import { Database, Gem, Headphones, LayoutDashboard, User2Icon, WalletCards } from 'lucide-react'
-import { UserAvatar } from '@clerk/nextjs'
+import { useAuth, UserAvatar } from '@clerk/nextjs'
 import Link from 'next/link'
 import { UserDetailContext } from '@/context/UserDetailContext'
 import { Button } from '@/components/ui/button'
 import { usePathname } from 'next/navigation'
+import { useConvex } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 
 const MenuOptions=[
     {
@@ -29,22 +31,17 @@ const MenuOptions=[
     },
     {
         title: 'AI Agents',
-        url: '#',
+        url: '/dashboard/my-agents',
         icon: Headphones
     },
     {
-        title: 'Data',
-        url: '#',
-        icon: Database
-    },
-    {
         title: 'Pricing',
-        url: '#',
+        url: '/dashboard/pricing',
         icon: WalletCards
     },
     {
         title: 'Profile',
-        url: '#',
+        url: '/dashboard/profile',
         icon: User2Icon
     },
 ]
@@ -52,6 +49,31 @@ function AppSidebar() {
     const {open} = useSidebar();
     const {userDetail, setUserDetail} = useContext(UserDetailContext);
     const path = usePathname()
+    const {has} = useAuth()
+    const isPaidUser = has&&has({ plan: 'unlimited_plans'})
+    console.log("isPaidUser:", isPaidUser)
+    const convex = useConvex()
+    const [totalRemainingCredits, setTotalRemainingCredits] = React.useState<number>(0);
+    
+    //it is called when user is not paid user
+    useEffect(()=>{
+        if(!isPaidUser && userDetail){
+            GetUserAgent();
+        }
+    },[userDetail])
+    //if its not paid user then we have to show count
+    const GetUserAgent= async()=>{
+        const result = await convex.query(api.agent.GetUserAgents, {
+            userId: userDetail?._id
+        })
+        setTotalRemainingCredits(2-Number(result?.length || 0));
+        setUserDetail((prev:any)=>({
+            ...prev,
+            remainingCredits: 2-Number(result?.length || 0)
+        }))
+        console.log("User Agents:", result)
+        //return result of agents user created
+    }
   return (
      <Sidebar collapsible='icon'>
       <SidebarHeader>
@@ -80,11 +102,16 @@ function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className='mb-10'>
+        {!isPaidUser?
+        <div>
         <div className='flex gap-2 items-center'>
             <Gem/>
-            {open && <h2>Remaining Credits:<span className='font-bold'>{userDetail?.token}</span></h2>}
+            {open && <h2>Remaining Credits: <span className='font-bold'>{totalRemainingCredits}/2</span></h2>}
         </div>
-        {open && <Button>Upgrade to Unlimited</Button>}
+        {open && <Button className='mt-2'>Upgrade to Unlimited</Button>}
+        </div>: 
+        <div>
+            <h2>You can create Unlimited Agents</h2></div>}
         </SidebarFooter>
     </Sidebar>
   )

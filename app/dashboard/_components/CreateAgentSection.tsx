@@ -18,16 +18,30 @@ import { useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { useRouter } from 'next/navigation';
 import { UserDetailContext } from '@/context/UserDetailContext';
+import { useAuth } from '@clerk/nextjs';
+import { toast } from 'sonner';
 
 function CreateAgentSection() {
     const [openDialog,setOpenDialog] = useState(false)
+    //This connects your frontend to the Convex backend function
+//Used to store the agent in the database
     const CreateAgentMutation = useMutation(api.agent.CreateAgent);
     const [agentName, setAgentName] = useState<string>()
     const router = useRouter();
     const [loader,setLoader] = useState(false);
     const {userDetail,setUserDetail} = useContext(UserDetailContext)
+    const {has} = useAuth()
+    const isPaidUser = has&&has({ plan: 'unlimited_plans'})
 
+//  Sends data to backend:
+// agentId → unique identifier
+// name → user-entered agent name
+// userId → logged-in user
     const CreateAgent=async()=>{
+      if(!isPaidUser && userDetail&& userDetail.remainingCredits<=0){
+        toast.error("You have reached the limit of free agents creation. Please upgrade your plan to create more agents.");
+        return;
+      }
         setLoader(true);
         const agentId = uuidv4();//Generate Unique Agent Id
         const result = await CreateAgentMutation({
@@ -39,7 +53,7 @@ function CreateAgentSection() {
         setOpenDialog(false);
         setLoader(false);
 
-        //navigaet to Agent builder screen
+        //navigate to Agent builder screen
         router.push('/agent-builder'+agentId)
     }
   return (
@@ -56,6 +70,7 @@ function CreateAgentSection() {
       <DialogTitle>Enter Agent Name</DialogTitle>
       <DialogDescription>
         <Input placeholder='Agent Name' onChange={(event)=>setAgentName(event.target.value)}/>
+        {/* Captures the agent name as user types */}
       </DialogDescription>
     </DialogHeader>
     <DialogFooter>
