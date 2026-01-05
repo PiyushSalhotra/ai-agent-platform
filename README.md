@@ -19,3 +19,4 @@ You were manually routing to /sign-in, which is a special Clerk-controlled route
 That combination created a redirect loop.
 
 Routing to a protected normal page (/dashboard) let Clerk + middleware handle auth correctly, which is why it fixed the issue.
+
