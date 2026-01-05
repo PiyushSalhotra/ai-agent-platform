@@ -6,7 +6,8 @@ import { api } from '@/convex/_generated/api';
 import { useParams } from 'next/navigation';
 import { Agent } from '@/types/AgentType';
 import { Background, ReactFlow } from '@xyflow/react';
-import { nodeTypes } from '../page';
+import { nodeTypes } from '../nodeTypes';
+
 import "@xyflow/react/dist/style.css";
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
