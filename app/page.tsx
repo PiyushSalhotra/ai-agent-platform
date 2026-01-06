@@ -18,7 +18,7 @@ export default function Home() {
       <nav className="relative z-10 flex items-center justify-between px-10 py-4">
         <div className="flex items-center gap-2">
           <Image src="/logo.svg" alt="logo" width={35} height={35} />
-          <span className="text-xl font-semibold tracking-wide">Agentify</span>
+          <span className="text-xl font-semibold tracking-wide">PiAgent</span>
         </div>
 
         {/* Get Started */}
