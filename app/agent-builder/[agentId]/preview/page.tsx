@@ -23,7 +23,6 @@ function PreviewAgent() {
 // nodes
 // edges
 // agentToolConfig
-// metadata
   const [agentDetail, setAgentDetail] = React.useState<Agent>();
   const [config, setConfig] = useState<any>();
   //result generated from previous workflow we need to saved

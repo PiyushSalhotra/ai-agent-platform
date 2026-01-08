@@ -29,6 +29,15 @@ type Props = {
     openDialog:boolean,
     setOpenDialog:(open:boolean)=>void
 }
+
+// This stores:
+// Code language
+// File name
+// Example client-side code
+// The code shows:
+// How to call /api/agent-chat
+// How to read streamed responses
+// How to process chunks in real time
 const code = [
   {
     language: 'jsx',

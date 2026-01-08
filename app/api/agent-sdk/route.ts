@@ -6,6 +6,7 @@ import z from "zod";
 import { Agent, run, tool } from "@openai/agents";
 
 //testing whether our AI agent chat pipeline works end-to-end with real-time streaming.
+//This function runs whenever the frontend sends a POST request to this route.
 export async function POST(req:NextRequest){
     const {userId,agentId, userInput} = await req.json();
 
@@ -27,8 +28,13 @@ export async function POST(req:NextRequest){
     }
 
     //Map All tools
+    //Convert tool definitions into real tools
+    //Each tool stored in the database is converted into an executable AI tool.
         const generatedTools = agentDetail?.agentToolConfig?.tools?.map((t: any) => {
       // Dynamically build zod object for parameters
+      //Dynamically creates validation rules
+      //Ensures tools receive correct inputs
+     //Prevents invalid API calls
       const paramSchema = z.object(
         Object.fromEntries(
           Object.entries(t.parameters).map(([key, type]) => {
@@ -39,6 +45,7 @@ export async function POST(req:NextRequest){
         )
       );
     
+      //This registers the tool with OpenAI.
       return tool({
         name: t.name,
         description: t.description,
@@ -64,6 +71,10 @@ export async function POST(req:NextRequest){
       });
     });
     
+//     Each agent:
+// Has its own instructions
+// Uses the same tools
+// Handles specific tasks
     const createdAgents = agentDetail?.agentToolConfig?.agents.map((config:any)=>{
         return new Agent({
             name: config?.name,
@@ -72,17 +83,26 @@ export async function POST(req:NextRequest){
         })
     })
     
+//     This agent:
+// Does not answer directly
+// Decides which sub-agent should handle the request
+// Enables multi-agent routing
     const finalAgent = Agent.create({
         name: agentDetail?.name,
         instructions: `You determine which agent to use based on the user query.`,
         handoffs: createdAgents
     })
     
+    //Run the agent with streaming
+// Sends the user’s message to the agent
+// Keeps conversation context
+// Enables real-time streaming
     const result = await run(finalAgent,userInput,{
         conversationId: conversationId_,
         stream:true
     });
     
+    //This converts the AI output into a stream suitable for the browser.
     const stream = result.toTextStream({
         compatibleWithNodeStreams:true
     })

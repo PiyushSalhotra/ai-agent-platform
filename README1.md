@@ -64,6 +64,12 @@ Exports it for use throughout the app
 
 9.AppHeader.tsx
 10.AppSidebar.tsx
+AppSidebar is the left navigation sidebar of your dashboard.
+It is responsible for:
+Showing navigation links (Dashboard, AI Agents, Pricing, Profile)
+Showing remaining credits for free users
+Detecting paid vs free plan using Clerk
+Fetching user’s agents from Convex to calculate credits
 
 11.Arcjet.ts
 This file sets up Arcjet rate limiting for our Next.js backend.
@@ -154,7 +160,7 @@ selectedNode is set in WorkflowContext
         ↓
 SettingPanel re-renders
         ↓
-AgentSettings component opens 🎉
+AgentSettings component opens
 
 
 22.preview->page.tsx
@@ -421,5 +427,62 @@ Agents talk to each other and divide tasks
 agent-chat/route.ts
 This file defines a Next.js API route that powers live agent chat and tool execution. In the POST request, it receives the user’s input, agent definitions, tool definitions, conversation ID, and the primary agent name from the frontend. It first dynamically converts each tool definition into a real executable tool using @openai/agents: Zod is used to build a runtime-validated parameter schema based on the tool’s declared parameters, and each tool’s execute function constructs the API URL by replacing placeholders with actual values, optionally appending an API key, calling the external API via fetch, and returning the JSON response. Next, it creates multiple specialized Agent instances using the provided agent configs and attaches the generated tools to them. A final routing agent is then created whose job is to decide which sub-agent should handle the user’s query, using OpenAI’s agent handoff mechanism. The run() function executes this final agent with the user input while maintaining conversation continuity using conversationId and enabling streaming. The streamed AI response is converted into a Node-compatible text stream and returned directly to the client, allowing real-time chat updates.
 
+1.Receive user input
+The API gets the user’s message, agent ID, and user ID from the request.
+
+2.Load agent and conversation data
+It fetches the agent configuration from the database.
+If a conversation already exists, it continues that conversation.
+If not, it creates a new OpenAI conversation so the chat can remember past messages.
+
+3.Convert tool definitions into real tools
+Each tool stored in the database is converted into an executable AI tool.
+Zod is used to validate tool inputs at runtime.
+When a tool is called:
+URL placeholders are replaced with real values
+API keys are added if required
+The external API is called using fetch
+The API response is returned to the AI
+
+4.Create multiple specialized agents
+Different agents are created for different tasks.
+All agents can access the generated tools.
+
+5.Run the agent with streaming
+The agent processes the user’s message.
+The response is generated in real time using streaming.
+Conversation context is maintained using the conversation ID.
+
+6.Send live response to the frontend
+The streamed AI output is returned directly to the client.
+This allows the user to see the response appear live, like ChatGPT.
+
 chatui.tsx
 This ChatUi component handles real-time interaction with an AI agent by maintaining user input, message history, and loading states. When a user sends a message, it immediately updates the UI, calls a backend agent API with the agent configuration, tools, and conversation ID, and then streams the AI’s response chunk by chunk into the chat interface. The UI differentiates between user and assistant messages, shows a live “thinking” indicator during execution, and provides a reboot option to regenerate agent tools when the workflow changes.
+
+agent-sdk/route.ts
+This file creates a Next.js API route that:
+Receives a user’s chat message
+Loads an AI agent and its tools from the database
+Maintains conversation memory
+Lets the AI call external APIs as tools
+Streams the AI response back to the user in real time
+
+PublishCodeDialog.tsx
+PublishCodeDialog is a reusable dialog component that shows copy-able sample code explaining how to call the AI agent chat API and read streamed responses on the client side.
+
+Opens a modal dialog
+
+Displays example API usage code
+
+Supports:
+
+Syntax highlighting
+
+File name display
+
+Language selection
+
+One-click copy
+
+This is useful when users want to integrate your agent API into their own apps

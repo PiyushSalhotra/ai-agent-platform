@@ -40,9 +40,10 @@ const MenuOptions = [
 ];
 
 /* ---------------- COMPONENT ---------------- */
-
+//It renders the main navigation sidebar for the dashboard
 function AppSidebar() {
   const { open } = useSidebar();
+  //The usePathname hook is a Client Component hook used to read the current URL's pathname
   const path = usePathname();
   const convex = useConvex();
 
@@ -54,12 +55,20 @@ function AppSidebar() {
 
   /* ---- Clerk Plan Check ---- */
   const { has } = useAuth();
+// Clerk checks if user has unlimited_plans
+// If yes → paid user
+// If no → free user
   const isPaidUser = has?.({ plan: "unlimited_plans" }) ?? false;
 
-  /* ---- Credits State (LOCAL ONLY) ---- */
+  /* ---- Credits state (frontend-only) ---- */
+// Default free plan limit = 2 agents
+// This is UI state only
+// Not a security mechanism
   const [remainingCredits, setRemainingCredits] = useState<number>(2);
 
-  /* ---------------- EFFECT ---------------- */
+//  Runs only when:
+// User data is available
+// User is NOT paid
   useEffect(() => {
     if (!userDetail || isPaidUser) return;
 
@@ -68,6 +77,9 @@ function AppSidebar() {
         userId: userDetail._id,
       });
 
+//  Max free agents = 2
+// Credits left = 2 − agents created
+// Never goes below 0
       const creditsLeft = Math.max(0, 2 - (agents?.length ?? 0));
       setRemainingCredits(creditsLeft);
 
@@ -77,7 +89,6 @@ function AppSidebar() {
     fetchUserAgents();
   }, [convex, userDetail?._id, isPaidUser]);
 
-  /* ---------------- RENDER ---------------- */
 
   return (
     <Sidebar collapsible="icon">
@@ -100,7 +111,8 @@ function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     size={open ? "lg" : "default"}
-                    isActive={path === menu.url}
+                    isActive={path === menu.url} //Compares current URL with menu route
+                                                 //If matched, UI changes (active state)
                   >
                     <Link href={menu.url}>
                       <menu.icon />

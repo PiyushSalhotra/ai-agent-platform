@@ -10,16 +10,18 @@ export default defineSchema({
         token:v.number()
     }),
 
-    AgentTable:defineTable({
-        agentId: v.string(),
-        name: v.string(),
-        config: v.optional(v.any()),
-        nodes:v.optional(v.any()),
-        edges:v.optional(v.any()),
-        published: v.boolean(),
-        userId: v.id('UserTable'), //it will connect with userTable
-        agentToolConfig: v.optional(v.any())
-    }),
+    AgentTable: defineTable({
+  agentId: v.string(),
+  name: v.string(),
+  config: v.optional(v.any()),
+  nodes: v.optional(v.any()),
+  edges: v.optional(v.any()),
+  published: v.boolean(),
+  userId: v.id("UserTable"),//connect with userTable
+  agentToolConfig: v.optional(v.any()),
+})
+.index("by_user", ["userId"]), //to check how many agents a user has created
+
 
     ConversationTable:defineTable({
         conversationId: v.string(),
