@@ -1,5 +1,3 @@
-//create a mutation just like user.ts
-
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
@@ -16,7 +14,7 @@ export const CreateAgent = mutation({
       throw new Error("USER_NOT_FOUND");
     }
 
-    // 2️⃣ Check subscription
+    // 2️⃣ Check subscription (handle undefined/null)
     const isPaidUser = user.Subscribtion === "unlimited_plans";
 
     // 3️⃣ Count user's agents
@@ -44,29 +42,27 @@ export const CreateAgent = mutation({
   },
 });
 
-
 export const GetUserAgents = query({
     args:{
         userId: v.id('UserTable')
     },
-    handler:async(ctx , args)=>{
+    handler:async(ctx, args) => {
         const result = await ctx.db.query('AgentTable')
-        .filter(q=>q.eq(q.field('userId'), args.userId))
+        .filter(q => q.eq(q.field('userId'), args.userId))
         .order('desc')
         .collect()
 
         return result;
     }
-
 })
 
 export const GetAgentById = query({
     args: {
         agentId: v.string()
     },
-    handler: async(ctx ,args)=>{
+    handler: async(ctx, args) => {
         const result = await ctx.db.query('AgentTable')
-        .filter(q=>q.eq(q.field('agentId'), args.agentId))
+        .filter(q => q.eq(q.field('agentId'), args.agentId))
         .order('desc')
         .collect()
 
@@ -79,7 +75,7 @@ export const UpdateAgentDetail = mutation({
     agentId: v.string(),
     nodes: v.optional(v.any()),
     edges: v.optional(v.any()),
-    published: v.optional(v.boolean()), // ✅ ADD THIS
+    published: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const agent = await ctx.db
@@ -101,23 +97,14 @@ export const UpdateAgentDetail = mutation({
   },
 });
 
-// Add this to your agent.ts file temporarily for debugging
-export const DebugListAllAgents = query({
-    args: {},
-    handler: async(ctx) => {
-        const result = await ctx.db.query('AgentTable').collect();
-        return result;
-    }
-})
-
 export const UpdateAgentToolConfig = mutation({
     args:{
-        id:v.id('AgentTable'),
-        agentToolConfig:v.any()
+        id: v.id('AgentTable'),
+        agentToolConfig: v.any()
     },
-    handler:async(ctx , args)=>{
-        await ctx.db.patch(args.id,{
-            agentToolConfig:args.agentToolConfig
+    handler:async(ctx, args) => {
+        await ctx.db.patch(args.id, {
+            agentToolConfig: args.agentToolConfig
         })
     }
 })
