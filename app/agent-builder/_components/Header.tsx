@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button'
 import { Agent } from '@/types/AgentType'
-import { ChevronLeft, Code2, Play, X } from 'lucide-react'
+import { ChevronLeft, Code2, Play, X, History } from 'lucide-react'
 import Link from 'next/link'
-import React from 'react'
+import React, { useState } from 'react'
+import TriggerHistoryDialog from './TriggerHistoryDialog'
 
 type Props = {
   agentDetail: Agent | undefined,
@@ -10,6 +11,8 @@ type Props = {
   onPublish:()=> void
 }
 function Header({agentDetail,previewHeader=false, onPublish}:Props) {
+  const [openHistory, setOpenHistory] = useState(false);
+
   return (
     <div className='w-full p-3 flex items-center justify-between'>
         <div className='flex gap-2 items-center'>
@@ -17,6 +20,9 @@ function Header({agentDetail,previewHeader=false, onPublish}:Props) {
       <h2 className='text-xl '>{agentDetail?.name}</h2>
     </div>
     <div className='flex items-center gap-3'>
+        <Button variant={'ghost'} onClick={() => setOpenHistory(true)}>
+            <History className='mr-1.5 h-4 w-4'/>History
+        </Button>
         <Button variant={'ghost'}>
             <Code2/>Code
         </Button>
@@ -29,6 +35,14 @@ function Header({agentDetail,previewHeader=false, onPublish}:Props) {
 
         <Button onClick={onPublish}>Publish</Button>
     </div>
+
+    {agentDetail && (
+      <TriggerHistoryDialog 
+        openDialog={openHistory} 
+        setOpenDialog={setOpenHistory} 
+        agentId={agentDetail.agentId} 
+      />
+    )}
     </div>
   )
 }

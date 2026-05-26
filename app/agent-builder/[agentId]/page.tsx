@@ -36,6 +36,7 @@ import { Agent } from "@/types/AgentType";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
+import axios from "axios";
 
 /* FIXED: Added 'start' key for StartNode */
 
@@ -132,6 +133,22 @@ function AgentBuilder() {
         nodes: addedNodes,
         edges: nodeEdges,
       });
+
+      // Synchronize local scheduler for offline dev
+      const cronNode = addedNodes?.find((n: any) => n.type === "CronNode");
+      if (cronNode) {
+        const interval = cronNode.data?.settings?.interval || "60";
+        const isPublished = agentDetail?.published || false;
+        await axios.post(`/api/trigger/${agentId}/local-schedule`, {
+          active: isPublished,
+          intervalMinutes: interval,
+        }).catch(err => console.error("Local schedule API error:", err));
+      } else {
+        await axios.post(`/api/trigger/${agentId}/local-schedule`, {
+          active: false,
+        }).catch(err => console.error("Local schedule API error:", err));
+      }
+
       toast.success("Saved!");
     } finally {
       setIsSaving(false);
@@ -192,7 +209,19 @@ function AgentBuilder() {
       agentId: agentId as string,
       published: true,
     });
+
+    // Synchronize local scheduler for offline dev
+    const cronNode = addedNodes?.find((n: any) => n.type === "CronNode");
+    if (cronNode) {
+      const interval = cronNode.data?.settings?.interval || "60";
+      await axios.post(`/api/trigger/${agentId}/local-schedule`, {
+        active: true,
+        intervalMinutes: interval,
+      }).catch(err => console.error("Local schedule API error:", err));
+    }
+
     toast.success("Agent published successfully!");
+    GetAgentDetail();
   } catch (err) {
     toast.error("Failed to publish agent");
   }

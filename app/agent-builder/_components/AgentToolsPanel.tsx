@@ -1,5 +1,5 @@
 import { WorkflowContext } from '@/context/WorkflowContext';
-import { Merge, MousePointer, Repeat, Square, ThumbsUp, Webhook } from 'lucide-react'
+import { Clock, Merge, MousePointer, Repeat, Square, ThumbsUp, Webhook } from 'lucide-react'
 import React, { useContext } from 'react'
 import { labelDayButton } from 'react-day-picker';
 const AgentTools = [
@@ -44,6 +44,20 @@ const AgentTools = [
         bgColor: '#D1F0FF',
         id: 'api',
         type: 'ApiNode'
+    },
+    {
+        name: 'Webhook Trigger',
+        icon: Webhook,
+        bgColor: '#E0F2FE',
+        id: 'webhook',
+        type: 'WebhookNode'
+    },
+    {
+        name: 'Cron Trigger',
+        icon: Clock,
+        bgColor: '#FEF3C7',
+        id: 'cron',
+        type: 'CronNode'
     },
 ];
 

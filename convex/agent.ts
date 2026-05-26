@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { api } from "./_generated/api";
 
 export const CreateAgent = mutation({
   args: {
@@ -87,11 +88,37 @@ export const UpdateAgentDetail = mutation({
       throw new Error("Agent not found");
     }
 
-    await ctx.db.patch(agent._id, {
+    const currentNodes = args.nodes !== undefined ? args.nodes : agent.nodes;
+    const isPublished = args.published !== undefined ? args.published : agent.published;
+    const hasCronNode = Array.isArray(currentNodes) && currentNodes.some((n: any) => n.type === "CronNode");
+
+    let nextVersion = agent.scheduleVersion;
+
+    if (isPublished) {
+      if (hasCronNode) {
+        nextVersion = (agent.scheduleVersion ?? 0) + 1;
+      }
+    } else {
+      if (agent.published) {
+        nextVersion = (agent.scheduleVersion ?? 0) + 1;
+      }
+    }
+
+    const updateFields: any = {
       ...(args.nodes !== undefined && { nodes: args.nodes }),
       ...(args.edges !== undefined && { edges: args.edges }),
       ...(args.published !== undefined && { published: args.published }),
-    });
+      ...(nextVersion !== undefined && { scheduleVersion: nextVersion }),
+    };
+
+    await ctx.db.patch(agent._id, updateFields);
+
+    if (isPublished && hasCronNode && nextVersion !== undefined) {
+      await ctx.scheduler.runAfter(0, api.trigger.runScheduledAgent, {
+        agentId: args.agentId,
+        scheduleVersion: nextVersion,
+      });
+    }
 
     return { success: true, agentId: args.agentId };
   },
@@ -107,4 +134,37 @@ export const UpdateAgentToolConfig = mutation({
             agentToolConfig: args.agentToolConfig
         })
     }
-})
+});
+
+export const LogTriggerRun = mutation({
+  args: {
+    agentId: v.string(),
+    source: v.string(),
+    inputPrompt: v.string(),
+    response: v.string(),
+    status: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("TriggerRunTable", {
+      agentId: args.agentId,
+      source: args.source,
+      inputPrompt: args.inputPrompt,
+      response: args.response,
+      status: args.status,
+      executedAt: Date.now(),
+    });
+  },
+});
+
+export const GetTriggerRuns = query({
+  args: {
+    agentId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("TriggerRunTable")
+      .withIndex("by_agent", (q) => q.eq("agentId", args.agentId))
+      .order("desc")
+      .collect();
+  },
+});

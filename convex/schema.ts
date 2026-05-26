@@ -19,6 +19,7 @@ export default defineSchema({
   published: v.boolean(),
   userId: v.id("UserTable"),//connect with userTable
   agentToolConfig: v.optional(v.any()),
+  scheduleVersion: v.optional(v.number()),
 })
 .index("by_user", ["userId"]), //to check how many agents a user has created
 
@@ -27,5 +28,14 @@ export default defineSchema({
         conversationId: v.string(),
         agentId: v.id('AgentTable'),
         userId: v.id('UserTable'),
-    })
+    }),
+
+    TriggerRunTable: defineTable({
+      agentId: v.string(),
+      source: v.string(),
+      inputPrompt: v.string(),
+      response: v.string(),
+      status: v.string(),
+      executedAt: v.number(),
+    }).index("by_agent", ["agentId"]),
 })

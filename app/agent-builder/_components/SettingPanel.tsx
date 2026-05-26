@@ -7,6 +7,8 @@ import IfElseSettings from '../_nodeSettings/IfElseSettings'
 import WhileSettings from '../_nodeSettings/WhileSettings'
 import UserApproval from '../_nodeSettings/UserApproval'
 import ApiSettings from '../_nodeSettings/ApiSettings'
+import WebhookSettings from '../_nodeSettings/WebhookSettings'
+import CronSettings from '../_nodeSettings/CronSettings'
 
 function SettingPanel() {
     const {selectedNode,setAddedNodes} = useContext(WorkflowContext)
@@ -57,6 +59,10 @@ function SettingPanel() {
       {selectedNode?.type=='UserApprovalNode' && <UserApproval selectedNode={selectedNode}
       updateFormData={(value:any)=>onUpdateNodeData(value)}/>}
       {selectedNode?.type=='ApiNode' && <ApiSettings selectedNode={selectedNode}
+      updateFormData={(value:any)=>onUpdateNodeData(value)}/>}
+      {selectedNode?.type=='WebhookNode' && <WebhookSettings selectedNode={selectedNode}
+      updateFormData={(value:any)=>onUpdateNodeData(value)}/>}
+      {selectedNode?.type=='CronNode' && <CronSettings selectedNode={selectedNode}
       updateFormData={(value:any)=>onUpdateNodeData(value)}/>}
     </div>
   )

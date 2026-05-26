@@ -29,6 +29,8 @@ function ChatUi({GenerateAgentToolConfig,loading,agentDetail,conversationId}: Pr
         setMessages([...messages,{role:'user', content:userInput}]);
         //Clear input box
         setUserInput('');
+        const activeConfig = agentDetail?.agentToolConfig?.parsedJson || agentDetail?.agentToolConfig || agentDetail?.config || {};
+        
         //Call backend agent API
         const res = await fetch('/api/agent-chat',{
             method:'POST',
@@ -37,8 +39,8 @@ function ChatUi({GenerateAgentToolConfig,loading,agentDetail,conversationId}: Pr
             },
             body:JSON.stringify({
                 agentName:agentDetail?.name,
-                agents:agentDetail?.config?.agents||[],
-                tools:agentDetail?.config?.tools||[],
+                agents:activeConfig?.agents||[],
+                tools:activeConfig?.tools||[],
                 input:userInput,
                 conversationId:conversationId
             })

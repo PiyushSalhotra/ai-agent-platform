@@ -8,3 +8,9 @@ coverage
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# typescript build info
+tsconfig.tsbuildinfo
+
+# data export
+agent_table.json

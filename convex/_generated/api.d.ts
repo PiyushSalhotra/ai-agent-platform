@@ -10,6 +10,7 @@
 
 import type * as agent from "../agent.js";
 import type * as conversation from "../conversation.js";
+import type * as trigger from "../trigger.js";
 import type * as user from "../user.js";
 
 import type {
@@ -21,6 +22,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   agent: typeof agent;
   conversation: typeof conversation;
+  trigger: typeof trigger;
   user: typeof user;
 }>;
 

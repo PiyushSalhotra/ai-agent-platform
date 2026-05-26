@@ -122,8 +122,10 @@ const GenerateWorkflow = () => {
                 break;
             }
 
-            // 🚀 Start Node
-            case "StartNode": {
+            // 🚀 Start Node, Webhook Node, Cron Node
+            case "StartNode":
+            case "WebhookNode":
+            case "CronNode": {
                 if (connectedEdges.length === 1) {
                     next = connectedEdges[0].target;
                 }
@@ -157,8 +159,9 @@ const GenerateWorkflow = () => {
         };
     });
 
-    // 🎯 Find the Start Node
-    const startNode = agentDetail?.nodes?.find((n: any) => n.type === "StartNode");
+    // 🎯 Find the Start Node (Prioritize Webhook/Cron triggers over default StartNode)
+    const startNode = agentDetail?.nodes?.find((n: any) => n.type === "WebhookNode" || n.type === "CronNode") ||
+                      agentDetail?.nodes?.find((n: any) => n.type === "StartNode");
 
     // 🧱 Final Config structure
     const config = {
