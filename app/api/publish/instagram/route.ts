@@ -14,9 +14,13 @@ export async function GET(req: NextRequest) {
                         !imageUrl.startsWith("http");
                         
   if (isPlaceholder) {
-    imageUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80";
-  } else if (imageUrl.includes("unsplash.com") && !imageUrl.includes("?")) {
-    imageUrl += "?auto=format&fit=crop&w=1200&q=80";
+    imageUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?fm=jpg&fit=crop&w=1200&q=80";
+  } else if (imageUrl.includes("unsplash.com")) {
+    if (!imageUrl.includes("?")) {
+      imageUrl += "?fm=jpg&fit=crop&w=1200&q=80";
+    } else if (!imageUrl.includes("fm=") && !imageUrl.includes("format=")) {
+      imageUrl += "&fm=jpg";
+    }
   }
   const IG_USER_ID = process.env.INSTAGRAM_USER_ID; 
   const FB_ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN; 
