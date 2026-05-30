@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     // Fetch frontpage stories from Hacker News Algolia API (free, no auth key needed)
