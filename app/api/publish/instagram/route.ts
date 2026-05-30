@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const caption = searchParams.get("caption") || "";
-  // Instagram requires an image URL to publish a feed post.
-  const imageUrl = searchParams.get("imageUrl") || "https://yourdomain.com/default-cover.jpg";
+  // Instagram requires a publicly accessible image URL to publish a feed post.
+  // We use a beautiful, live tech-abstract background image as a default fallback.
+  const imageUrl = searchParams.get("imageUrl") || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80";
   const IG_USER_ID = process.env.INSTAGRAM_USER_ID; 
   const FB_ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN; 
 
