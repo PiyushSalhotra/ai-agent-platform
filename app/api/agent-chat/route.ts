@@ -13,9 +13,9 @@ export async  function POST(req:NextRequest){
   const paramSchema = z.object(
     Object.fromEntries(
       Object.entries(t.parameters).map(([key, type]) => {
-        if (type === "string") return [key, z.string()];
-        if (type === "number") return [key, z.number()];
-        return [key, z.any()];
+        if (type === "string") return [key, z.string().optional()];
+        if (type === "number") return [key, z.number().optional()];
+        return [key, z.any().optional()];
       })
     )
   );
@@ -28,7 +28,8 @@ export async  function POST(req:NextRequest){
       // Replace placeholders in URL
       let url = t.url;
       for (const key in params) {
-        url = url.replace(`{{${key}}}`, encodeURIComponent(params[key]));
+        const value = params[key] !== undefined && params[key] !== null ? params[key] : "";
+        url = url.replace(`{{${key}}}`, encodeURIComponent(value));
       }
 
       if (t.includeApiKey && t.apiKey) {
