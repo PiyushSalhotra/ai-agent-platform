@@ -50,7 +50,33 @@ export async function GET(req: NextRequest) {
       throw new Error(containerData.error?.message || "Failed to create media container");
     }
 
-    // Step 2: Publish the Media Container to the feed
+    // Step 2: Poll container status until it is FINISHED (required by Instagram for background processing)
+    const containerId = containerData.id;
+    let isReady = false;
+    for (let i = 0; i < 8; i++) {
+      // Wait 2 seconds
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const statusRes = await fetch(
+        `https://graph.facebook.com/v19.0/${containerId}?fields=status_code&access_token=${FB_ACCESS_TOKEN}`
+      );
+      const statusData = await statusRes.json();
+      console.log(`[Instagram publisher] Container ${containerId} status: ${statusData.status_code}`);
+
+      if (statusData.status_code === "FINISHED") {
+        isReady = true;
+        break;
+      }
+      if (statusData.status_code === "ERROR") {
+        throw new Error(statusData.error?.message || "Media container processing failed");
+      }
+    }
+
+    if (!isReady) {
+      throw new Error("Instagram timeout: Media container processing took too long.");
+    }
+
+    // Step 3: Publish the Media Container to the feed
     const publishRes = await fetch(
       `https://graph.facebook.com/v19.0/${IG_USER_ID}/media_publish`,
       {
@@ -59,7 +85,7 @@ export async function GET(req: NextRequest) {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          creation_id: containerData.id,
+          creation_id: containerId,
           access_token: FB_ACCESS_TOKEN || "",
         }),
       }
