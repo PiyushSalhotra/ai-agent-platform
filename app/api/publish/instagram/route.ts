@@ -15,6 +15,8 @@ export async function GET(req: NextRequest) {
                         
   if (isPlaceholder) {
     imageUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80";
+  } else if (imageUrl.includes("unsplash.com") && !imageUrl.includes("?")) {
+    imageUrl += "?auto=format&fit=crop&w=1200&q=80";
   }
   const IG_USER_ID = process.env.INSTAGRAM_USER_ID; 
   const FB_ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN; 
