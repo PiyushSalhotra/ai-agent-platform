@@ -30,10 +30,20 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Step 1: Create an Instagram Media Container
+    // Step 1: Create an Instagram Media Container using a POST body (handles long captions & special characters)
     const containerRes = await fetch(
-      `https://graph.facebook.com/v19.0/${IG_USER_ID}/media?image_url=${encodeURIComponent(imageUrl)}&caption=${encodeURIComponent(caption)}&access_token=${FB_ACCESS_TOKEN}`,
-      { method: "POST" }
+      `https://graph.facebook.com/v19.0/${IG_USER_ID}/media`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          image_url: imageUrl,
+          caption: caption,
+          access_token: FB_ACCESS_TOKEN || "",
+        }),
+      }
     );
     const containerData = await containerRes.json();
     if (!containerData.id) {
@@ -42,8 +52,17 @@ export async function GET(req: NextRequest) {
 
     // Step 2: Publish the Media Container to the feed
     const publishRes = await fetch(
-      `https://graph.facebook.com/v19.0/${IG_USER_ID}/media_publish?creation_id=${containerData.id}&access_token=${FB_ACCESS_TOKEN}`,
-      { method: "POST" }
+      `https://graph.facebook.com/v19.0/${IG_USER_ID}/media_publish`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          creation_id: containerData.id,
+          access_token: FB_ACCESS_TOKEN || "",
+        }),
+      }
     );
     const publishData = await publishRes.json();
     if (publishData.error) {
