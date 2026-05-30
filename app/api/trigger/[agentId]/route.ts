@@ -70,9 +70,9 @@ export async function POST(
       const paramSchema = z.object(
         Object.fromEntries(
           Object.entries(t.parameters).map(([key, type]) => {
-            if (type === "string") return [key, z.string().optional()];
-            if (type === "number") return [key, z.number().optional()];
-            return [key, z.any().optional()];
+            if (type === "string") return [key, z.string()];
+            if (type === "number") return [key, z.number()];
+            return [key, z.any()];
           })
         )
       );
