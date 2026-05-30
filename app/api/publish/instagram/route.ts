@@ -6,9 +6,14 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const caption = searchParams.get("caption") || "";
   // Instagram requires a publicly accessible image URL to publish a feed post.
-  // We use a self-hosted image from our own Vercel domain as the default fallback.
-  // This guarantees Meta's crawler can always fetch it (Unsplash blocks Meta bots).
-  const SELF_HOSTED_FALLBACK = "https://ai-agent-platform-n48i.vercel.app/tech-bg.jpg";
+  // We use a pool of self-hosted images from our own Vercel domain as default fallbacks.
+  // This guarantees Meta's crawler can always fetch it (Unsplash blocks Meta bots) and provides variety.
+  const FALLBACK_IMAGES = [
+    "https://ai-agent-platform-n48i.vercel.app/tech-bg.jpg",
+    "https://ai-agent-platform-n48i.vercel.app/tech-bg-2.jpg",
+    "https://ai-agent-platform-n48i.vercel.app/tech-bg-3.jpg",
+    "https://ai-agent-platform-n48i.vercel.app/tech-bg-4.jpg"
+  ];
   
   let imageUrl = searchParams.get("imageUrl") || "";
   const isPlaceholder = !imageUrl || 
@@ -18,7 +23,7 @@ export async function GET(req: NextRequest) {
                         !imageUrl.startsWith("http");
                         
   if (isPlaceholder) {
-    imageUrl = SELF_HOSTED_FALLBACK;
+    imageUrl = FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
   }
   const IG_USER_ID = process.env.INSTAGRAM_USER_ID; 
   const FB_ACCESS_TOKEN = process.env.FACEBOOK_ACCESS_TOKEN; 
