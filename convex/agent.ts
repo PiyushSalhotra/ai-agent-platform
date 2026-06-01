@@ -71,6 +71,13 @@ export const GetAgentById = query({
     }
 })
 
+export const GetAllAgents = query({
+    args: {},
+    handler: async (ctx) => {
+        return await ctx.db.query("AgentTable").collect();
+    }
+})
+
 export const UpdateAgentDetail = mutation({
   args: {
     agentId: v.string(),

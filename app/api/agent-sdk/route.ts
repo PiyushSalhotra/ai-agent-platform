@@ -69,8 +69,19 @@ export async function POST(req:NextRequest){
             url += url.includes("?") ? `&key=${t.apiKey}` : `?key=${t.apiKey}`;
           }
     
+          const fetchOptions: RequestInit = {
+            method: t.method || "GET",
+          };
+
+          if (fetchOptions.method === "POST") {
+            fetchOptions.headers = {
+              "Content-Type": "application/json",
+            };
+            fetchOptions.body = JSON.stringify(params);
+          }
+
           // Make API request
-          const response = await fetch(url);
+          const response = await fetch(url, fetchOptions);
           const data = await response.json();
           console.log(data);
           // Return raw data (or transform if needed)
