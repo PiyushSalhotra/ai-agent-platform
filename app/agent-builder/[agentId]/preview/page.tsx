@@ -116,7 +116,15 @@ const GenerateWorkflow = () => {
 
             // ✅ User Approval Node (manual checkpoint)
             case "UserApprovalNode": {
-                if (connectedEdges.length === 1) {
+                const approveEdge = connectedEdges.find((e: any) => e.sourceHandle === "approve");
+                const rejectEdge = connectedEdges.find((e: any) => e.sourceHandle === "reject");
+
+                if (approveEdge || rejectEdge) {
+                    next = {
+                        approve: approveEdge?.target || null,
+                        reject: rejectEdge?.target || null,
+                    };
+                } else if (connectedEdges.length === 1) {
                     next = connectedEdges[0].target;
                 }
                 break;
