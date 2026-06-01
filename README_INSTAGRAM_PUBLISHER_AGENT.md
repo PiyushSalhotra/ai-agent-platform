@@ -132,3 +132,6 @@ We use the `@openai/agents` SDK.
 4. The LLM acts as an orchestrator. It decides that it needs to call `getTechNews` first. The route runs the function, fetches the news, and passes the output back to the LLM.
 5. The LLM synthesizes the headlines into a summary and reasons that it must call `publishToInstagram` with the summary as the `caption`.
 6. The route runs `publishToInstagram`, posting the update, and returns the confirmation to the LLM to complete the chain.
+
+
+"I built a visual AI agent orchestration platform. To demonstrate its power, I designed an automated news publisher pipeline. The system handles scheduling via Convex actions, triggers Next.js serverless functions, orchestrates multi-agent flows to scrape and summarize tech news, and publishes posts to Instagram. I solved production-level challenges like bypassing Meta crawler blocks through a self-hosted asset rotation pool and preventing duplicate cron executions using a strict database version-matching algorithm."

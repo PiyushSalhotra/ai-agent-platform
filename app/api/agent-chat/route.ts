@@ -32,6 +32,14 @@ export async  function POST(req:NextRequest){
         url = url.replace(`{{${key}}}`, encodeURIComponent(value));
       }
 
+      // Resolve relative or localhost URLs in production environments
+      if (url.startsWith("/")) {
+        const baseUrl = process.env.APP_URL || "http://localhost:3000";
+        url = `${baseUrl}${url}`;
+      } else if (url.includes("localhost:3000") && process.env.APP_URL) {
+        url = url.replace("http://localhost:3000", process.env.APP_URL);
+      }
+
       if (t.includeApiKey && t.apiKey) {
         url += url.includes("?") ? `&key=${t.apiKey}` : `?key=${t.apiKey}`;
       }
