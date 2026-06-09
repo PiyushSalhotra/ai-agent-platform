@@ -8,18 +8,25 @@ import { Copy } from 'lucide-react'
 
 function WebhookSettings({ selectedNode, updateFormData }: any) {
     const [name, setName] = useState('');
+    const [customBaseUrl, setCustomBaseUrl] = useState('');
     const [webhookUrl, setWebhookUrl] = useState('');
 
     useEffect(() => {
         if (selectedNode?.data) {
             setName(selectedNode.data.label || 'Webhook Trigger');
+            setCustomBaseUrl(selectedNode.data.settings?.customBaseUrl || '');
         }
+    }, [selectedNode]);
+
+    useEffect(() => {
         if (typeof window !== 'undefined') {
             const pathParts = window.location.pathname.split('/');
             const agentId = pathParts[2] || '';
-            setWebhookUrl(`${window.location.origin}/api/trigger/${agentId}`);
+            const base = customBaseUrl.trim() || window.location.origin;
+            const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+            setWebhookUrl(`${cleanBase}/api/trigger/${agentId}`);
         }
-    }, [selectedNode]);
+    }, [customBaseUrl, selectedNode]);
 
     const handleCopy = () => {
         if (webhookUrl) {
@@ -31,6 +38,7 @@ function WebhookSettings({ selectedNode, updateFormData }: any) {
     const onSave = () => {
         updateFormData({
             name: name,
+            customBaseUrl: customBaseUrl,
         });
         toast.success("Webhook settings saved!");
     }
@@ -64,6 +72,19 @@ function WebhookSettings({ selectedNode, updateFormData }: any) {
                         <Copy className='h-4 w-4' />
                     </Button>
                 </div>
+            </div>
+
+            <div className='mt-4 space-y-1.5'>
+                <Label className='text-xs font-semibold text-slate-600'>Base URL Override (Optional)</Label>
+                <Input
+                    placeholder='e.g., http://localhost:3000 or https://xxxx.ngrok-free.app'
+                    onChange={(event) => setCustomBaseUrl(event.target.value)}
+                    value={customBaseUrl}
+                    className='h-9 text-xs'
+                />
+                <p className='text-slate-400 text-[10px] leading-relaxed'>
+                    Override the base URL if testing locally with a tunnel, custom domain, or ngrok.
+                </p>
             </div>
 
             <Button className='w-full mt-6 h-9 font-medium' onClick={onSave}>Save</Button>
