@@ -3,14 +3,35 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   const apiKey = process.env.LOOPS_API_KEY;
 
-  if (!apiKey || apiKey === "loops_api_key_placeholder") {
-    return NextResponse.json(
-      { 
-        error: "Loops.so API Key is not configured.", 
-        help: "Please add LOOPS_API_KEY to your .env.local file."
-      },
-      { status: 500 }
-    );
+  if (!apiKey || apiKey === "loops_api_key_placeholder" || apiKey === "mock") {
+    try {
+      const body = await req.json();
+      const email = body.email || "";
+      const score = body.score || "B/C";
+      const company = body.company || {};
+      const companyName = company.name || "Individual / Freelancer";
+
+      console.log("\n==================================================");
+      console.log("[MOCK EMAIL NURTURE NODE] ✉️ Loops API Key is not configured or set to 'mock'. Returning mock subscription:");
+      console.log(`Contact Email: ${email}`);
+      console.log(`Company:       ${companyName}`);
+      console.log("==================================================\n");
+
+      return NextResponse.json({
+        success: true,
+        platform: "Loops.so (Mocked)",
+        status: "Contact Subscribed (Mocked)",
+        email,
+        campaignId: "camp_onboarding_drip_v2",
+        tags: ["lead-qualification", `score-${score.toLowerCase()}`],
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      return NextResponse.json(
+        { error: "Failed to add mock contact to Loops", details: err.message },
+        { status: 500 }
+      );
+    }
   }
 
   try {

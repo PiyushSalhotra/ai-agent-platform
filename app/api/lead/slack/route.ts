@@ -3,14 +3,45 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
-  if (!webhookUrl || webhookUrl === "slack_webhook_url_placeholder") {
-    return NextResponse.json(
-      { 
-        error: "Slack Webhook URL is not configured.", 
-        help: "Please add SLACK_WEBHOOK_URL to your .env.local file."
-      },
-      { status: 500 }
-    );
+  if (!webhookUrl || webhookUrl === "slack_webhook_url_placeholder" || webhookUrl === "mock") {
+    try {
+      const body = await req.json();
+      const email = body.email || "";
+      const company = body.company || {};
+      const score = body.score || "A";
+      
+      const companyName = company.name || "Unknown Company";
+      const companySize = company.size || "Unknown";
+      const funding = company.funding || "N/A";
+      const industry = company.industry || "Unknown";
+
+      const slackMessage = `🚨 *New High-Value Lead Signed Up!* 🚨\n\n` +
+        `• *Email:* \`${email}\`\n` +
+        `• *Company:* *${companyName}*\n` +
+        `• *Size:* \`${companySize} employees\`\n` +
+        `• *Funding:* \`${funding}\`\n` +
+        `• *Industry:* \`${industry}\`\n` +
+        `• *Lead Score:* ⭐️ *Score ${score}* (High ICP Match)\n\n` +
+        `👉 *HubSpot Deal created automatically.* Follow up immediately!`;
+
+      console.log("\n==================== MOCK SLACK NOTIFICATION ====================");
+      console.log(`[MOCK SLACK API] Slack Webhook URL is not configured or set to 'mock'. Alert printed to console:`);
+      console.log(slackMessage);
+      console.log("============================================================\n");
+
+      return NextResponse.json({
+        success: true,
+        platform: "Slack (Mocked)",
+        status: "Message Sent (Console)",
+        deliveredMessage: slackMessage,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      return NextResponse.json(
+        { error: "Failed to send mock Slack alert", details: err.message },
+        { status: 500 }
+      );
+    }
   }
 
   try {

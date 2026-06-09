@@ -3,14 +3,39 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   const token = process.env.HUBSPOT_ACCESS_TOKEN;
 
-  if (!token || token === "hubspot_access_token_placeholder") {
-    return NextResponse.json(
-      { 
-        error: "HubSpot Access Token is not configured.", 
-        help: "Please add HUBSPOT_ACCESS_TOKEN to your .env.local file with a private app access token."
-      },
-      { status: 500 }
-    );
+  if (!token || token === "hubspot_access_token_placeholder" || token === "mock") {
+    try {
+      const body = await req.json();
+      const email = body.email || "";
+      const company = body.company || {};
+      const score = body.score || "A";
+      
+      const companyName = company.name || "Unknown Company";
+      const dealName = `${companyName} - Enterprise Contract (Auto-Scored)`;
+      const dealValue = company.size ? Math.min(120000, company.size * 120) : 10000;
+
+      console.log("\n==================================================");
+      console.log("[MOCK CRM HUBSPOT NODE] 💼 HubSpot Access Token is not configured or set to 'mock'. Returning mock deal:");
+      console.log(`Deal Name:   ${dealName}`);
+      console.log(`Mock Deal ID: mock_deal_${Math.floor(Math.random() * 1000000)}`);
+      console.log("==================================================\n");
+
+      return NextResponse.json({
+        success: true,
+        crm: "HubSpot (Mocked)",
+        status: "Deal Created (Mocked)",
+        dealId: `mock_deal_${Math.floor(Math.random() * 1000000)}`,
+        dealName,
+        value: dealValue,
+        pipelineStage: "Qualified Lead (Score A)",
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      return NextResponse.json(
+        { error: "Failed to create mock HubSpot Deal", details: err.message },
+        { status: 500 }
+      );
+    }
   }
 
   try {
