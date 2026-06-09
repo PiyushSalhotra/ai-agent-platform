@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
 
@@ -12,7 +12,7 @@ export const CreateAgent = mutation({
     // 1️⃣ Fetch user
     const user = await ctx.db.get(args.userId);
     if (!user) {
-      throw new Error("USER_NOT_FOUND");
+      throw new ConvexError("USER_NOT_FOUND");
     }
 
     // 2️⃣ Check subscription (handle undefined/null)
@@ -28,7 +28,7 @@ export const CreateAgent = mutation({
 
     // 4️⃣ Enforce limit (BACKEND RULE)
     if (!isPaidUser && agents.length >= FREE_LIMIT) {
-      throw new Error("FREE_AGENT_LIMIT_REACHED");
+      throw new ConvexError("FREE_AGENT_LIMIT_REACHED");
     }
 
     // 5️⃣ Create agent

@@ -6,20 +6,21 @@ console.log("Convex loaded user.ts module");
 export const CreateNewUser = mutation({
     args:{
         name: v.string(),
-        email: v.string()
+        email: v.string(),
+        Subscribtion: v.optional(v.string())
     },
     handler: async(ctx, args) => {
         //if user already exists
         const user = await ctx.db.query('UserTable')
             .filter((q) => q.eq(q.field('email'), args.email))
-            .collect()
+            .first();
 
         //if not, create new user
-        if(user?.length == 0){
+        if(!user){
             const userData = {
                 name: args.name,
                 email: args.email,
-                Subscribtion: "free", // ✅ ADD DEFAULT SUBSCRIPTION
+                Subscribtion: args.Subscribtion ?? "free", // ✅ ADD DEFAULT SUBSCRIPTION
                 token: 5000
             }
             const result = await ctx.db.insert('UserTable', userData);
@@ -28,7 +29,19 @@ export const CreateNewUser = mutation({
                 ...userData
             };
         }
-        return user[0];
+
+        // if user exists, check if subscription status changed
+        if (args.Subscribtion && user.Subscribtion !== args.Subscribtion) {
+            await ctx.db.patch(user._id, {
+                Subscribtion: args.Subscribtion
+            });
+            return {
+                ...user,
+                Subscribtion: args.Subscribtion
+            };
+        }
+
+        return user;
     }
 })
 

@@ -3,7 +3,7 @@
 import { UserDetailContext } from "@/context/UserDetailContext";
 import { WorkflowContext } from "@/context/WorkflowContext";
 import { api } from "@/convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { Position, ReactFlowProvider } from "@xyflow/react";
 import { useMutation } from "convex/react";
 import React, { useEffect, useState } from "react";
@@ -12,6 +12,7 @@ function Provider({ children }: { children: React.ReactNode }) {
 
   // Clerk user object + loading state
   const { user, isLoaded } = useUser();
+  const { has } = useAuth();
   //user → Clerk user object (name, email, etc.)
   //isLoaded → ensures user data is ready
 
@@ -41,9 +42,12 @@ function Provider({ children }: { children: React.ReactNode }) {
   const CreateAndGetUser = async () => {
     console.log("🚀 Calling Convex mutation for:", user?.primaryEmailAddress?.emailAddress);
 
+    const isPaidUser = has?.({ plan: "unlimited_plans" }) ?? false;
+
     const result = await createUser({
       name: user?.fullName ?? "",
       email: user?.primaryEmailAddress?.emailAddress ?? "",
+      Subscribtion: isPaidUser ? "unlimited_plans" : "free",
     });
 
     console.log("Convex mutation result:", result);
