@@ -23,7 +23,10 @@ export const CreateNewUser = mutation({
                 token: 5000
             }
             const result = await ctx.db.insert('UserTable', userData);
-            return userData;
+            return {
+                _id: result,
+                ...userData
+            };
         }
         return user[0];
     }
