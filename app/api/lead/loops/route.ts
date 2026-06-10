@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       firstName: email.split("@")[0]
     };
 
-    const response = await fetch("https://ooh.loops.so/api/v1/contacts/create", {
+    const response = await fetch("https://app.loops.so/api/v1/contacts/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
