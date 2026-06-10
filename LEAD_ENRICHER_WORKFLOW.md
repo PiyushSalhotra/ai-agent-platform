@@ -141,3 +141,25 @@ Invoke-RestMethod -Uri "http://localhost:3000/api/trigger/<your-agent-id>" `
     -Body '{"email": "alex@vercel.com"}' `
     -Headers @{"Content-Type"="application/json"}
 ```
+
+subdomain/hostname
+1. To Prove You Own the Domain (Verification)
+Before Zoho lets you send emails from @piagent.online, they need to ensure you actually own it so nobody else can impersonate you.
+
+How it works: Zoho will ask you to create a TXT or CNAME record and give you a weird string of text to put in the Hostname/Subdomain field (for example: zoho-verification).
+
+Why: This creates a hidden, specific location on the internet (e.g., zoho-verification.piagent.online). Zoho’s systems will check that exact location. If they see the secret code they gave you, they know you have the keys to the building.
+
+2. To Route Emails to the Right Place (MX Records)
+When someone sends an email to you@piagent.online, their email provider asks the internet, "Where does mail for this domain go?"
+
+How it works: You will set up MX (Mail Exchanger) records. For these, you usually type @ in the Hostname/Subdomain field, or leave it blank.
+
+Why: The @ symbol (or leaving it blank) represents your root domain (piagent.online). It tells the internet that any email sent to your main domain should be delivered directly to Zoho's mail servers.
+
+3. To Stop Your Emails from Going to Spam (SPF and DKIM)
+Later in the setup, Zoho will ask you to add security records to prove your emails are legitimate and not spam.
+
+How it works: For DKIM, Zoho will tell you to put a specific selector (like zmail._domainkey) into the Hostname field.
+
+Why: When you send an email, a receiving server (like Gmail) will look up zmail._domainkey.piagent.online to find your public security key, verifying that the email was actually sent by your AI agent and wasn't tampered with.

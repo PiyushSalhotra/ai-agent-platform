@@ -33,11 +33,17 @@ export async  function POST(req:NextRequest){
       }
 
       // Resolve relative or localhost URLs in production environments
+      let baseUrl = process.env.APP_URL;
+      if (!baseUrl) {
+        const host = req.headers.get("host") || "localhost:3000";
+        const protocol = host.includes("localhost") ? "http" : "https";
+        baseUrl = `${protocol}://${host}`;
+      }
+
       if (url.startsWith("/")) {
-        const baseUrl = process.env.APP_URL || "http://localhost:3000";
         url = `${baseUrl}${url}`;
-      } else if (url.includes("localhost:3000") && process.env.APP_URL) {
-        url = url.replace("http://localhost:3000", process.env.APP_URL);
+      } else if (url.includes("localhost:3000")) {
+        url = url.replace("http://localhost:3000", baseUrl);
       }
 
       if (t.includeApiKey && t.apiKey) {
