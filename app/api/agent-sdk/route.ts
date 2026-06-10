@@ -31,17 +31,24 @@ export async function POST(req:NextRequest){
     //Convert tool definitions into real tools
     //Each tool stored in the database is converted into an executable AI tool.
         const generatedTools = agentDetail?.agentToolConfig?.tools?.map((t: any) => {
-      // Dynamically build zod object for parameters
-      //Dynamically creates validation rules
-      //Ensures tools receive correct inputs
-     //Prevents invalid API calls
+      // Recursively build zod schema for parameters to support nested objects
+      const parseParamType = (type: any): z.ZodTypeAny => {
+        if (type === "string") return z.string();
+        if (type === "number") return z.number();
+        if (type === "boolean") return z.boolean();
+        if (type && typeof type === "object" && !Array.isArray(type)) {
+          return z.object(
+            Object.fromEntries(
+              Object.entries(type).map(([key, val]) => [key, parseParamType(val)])
+            )
+          );
+        }
+        return z.string().optional(); // Fallback to avoid empty schemas without type
+      };
+
       const paramSchema = z.object(
         Object.fromEntries(
-          Object.entries(t.parameters).map(([key, type]) => {
-            if (type === "string") return [key, z.string()];
-            if (type === "number") return [key, z.number()];
-            return [key, z.any()];
-          })
+          Object.entries(t.parameters).map(([key, type]) => [key, parseParamType(type)])
         )
       );
     
