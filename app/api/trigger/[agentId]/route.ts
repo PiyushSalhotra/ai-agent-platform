@@ -70,7 +70,7 @@ export async function POST(
       // Recursively build zod schema for parameters to support nested objects
       const parseParamType = (type: any): z.ZodTypeAny => {
         if (type === "string") return z.string();
-        if (type === "number") return z.number();
+        if (type === "number" || type === "integer") return z.number();
         if (type === "boolean") return z.boolean();
         if (type && typeof type === "object" && !Array.isArray(type)) {
           return z.object(
@@ -79,7 +79,7 @@ export async function POST(
             )
           );
         }
-        return z.string().optional(); // Fallback to avoid empty schemas without type
+        return z.string(); // Fallback to avoid empty schemas without type
       };
 
       const paramSchema = z.object(
