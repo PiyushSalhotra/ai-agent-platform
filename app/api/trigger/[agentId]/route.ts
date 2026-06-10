@@ -55,6 +55,7 @@ export async function POST(
         body.message ||
         body.input ||
         body.prompt ||
+        (body.email ? `Process signup for ${body.email}` : null) ||
         "Trigger agent execution workflow";
       console.log(
         `[Webhook Trigger API] External webhook run for agent ${agentId} with input: "${userInput}"`
