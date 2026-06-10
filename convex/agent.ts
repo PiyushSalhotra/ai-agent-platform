@@ -175,3 +175,10 @@ export const GetTriggerRuns = query({
       .collect();
   },
 });
+
+export const GetAllTriggerRuns = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("TriggerRunTable").order("desc").collect();
+  },
+});
