@@ -128,10 +128,6 @@ export async function POST(req:NextRequest){
     });
     
     //This converts the AI output into a stream suitable for the browser.
-    const stream = result.toTextStream({
-        compatibleWithNodeStreams:true
-    })
-    //@ts-ignore
-return new Response(stream)
-    
+    const stream = result.toTextStream();
+    return new Response(stream as any);
 }
