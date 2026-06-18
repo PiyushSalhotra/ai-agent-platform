@@ -117,13 +117,38 @@ async function handleEnrichment(email: string) {
     console.log(`Company: ${org.organization || domain} | Industry: ${org.industry || "N/A"}`);
     console.log("==================================================\n");
 
+    // Known company sizes — Hunter.io free tier only returns ~10 emails
+    // so email count * 5 is wildly inaccurate for large companies
+    const knownSizes: Record<string, number> = {
+      "google.com": 180000,
+      "microsoft.com": 220000,
+      "apple.com": 164000,
+      "amazon.com": 1500000,
+      "meta.com": 70000,
+      "facebook.com": 70000,
+      "stripe.com": 8500,
+      "shopify.com": 12000,
+      "vercel.com": 450,
+      "openai.com": 1700,
+      "netflix.com": 13000,
+      "airbnb.com": 6000,
+      "uber.com": 30000,
+      "twitter.com": 1500,
+      "x.com": 1500,
+      "salesforce.com": 70000,
+      "hubspot.com": 7000,
+    };
+
+    const estimatedSize = knownSizes[domain]
+      || (org.emails?.length ? org.emails.length * 5 : 10);
+
     return NextResponse.json({
       success: true,
       email,
       domain,
       company: {
         name: org.organization || domain.split(".")[0],
-        size: org.emails?.length * 5 || 10, // Hunter returns a list of emails; we can estimate size from it or set a baseline
+        size: estimatedSize,
         funding: "Seed/Growth", // Hunter doesn't output funding; we default it or look it up
         industry: org.industry || "Software & Technology",
         country: org.country || "United States",
